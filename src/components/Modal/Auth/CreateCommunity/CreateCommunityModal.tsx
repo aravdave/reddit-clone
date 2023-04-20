@@ -1,3 +1,4 @@
+import { auth, firestore } from "@/firebase/clientApp";
 import {
   Button,
   Modal,
@@ -13,15 +14,24 @@ import {
   Input,
   Stack,
   Checkbox,
+  Flex,
+  Icon,
 } from "@chakra-ui/react";
+import { doc, getDoc, serverTimestamp, setDoc } from "firebase/firestore";
 import React, { useState } from "react";
+import { useAuthState } from "react-firebase-hooks/auth";
+import { BsFillEyeFill, BsFillPersonFill } from "react-icons/bs";
+import { HiLockClosed } from "react-icons/hi";
 
 type Props = { open: boolean; handleClose: () => void };
 
 const CreateCommunityModal = ({ open, handleClose }: Props) => {
+  const [user] = useAuthState(auth);
   const [communityName, setCommunityName] = useState("");
   const [charsRemaining, setCharsRemaining] = useState(21);
   const [communityType, setCommunityType] = useState("public");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.value.length > 21) return;
@@ -36,9 +46,49 @@ const CreateCommunityModal = ({ open, handleClose }: Props) => {
     setCommunityType(event.target.name);
   };
 
+  const handleCreateCommunity = async () => {
+    //Validate the community
+    const format = /[ `!@#$%^&*()+\-=\[\]{};':"\\|,.<>\/?~]/;
+
+    if (format.test(communityName) || communityName.length < 3) {
+      return setError(
+        "Community names must be between 3-21 characters, and can only contain letters, numbers, or underscores"
+      );
+    }
+
+    setLoading(true);
+
+    try {
+      //Create the community document in firestore
+      //Check that name is not taken
+      // If valid name, create community
+      console.log("user", user);
+      const communityDocRef = doc(firestore, "communities", communityName);
+      const communityDoc = await getDoc(communityDocRef);
+
+      if (communityDoc.exists()) {
+        throw new Error(
+          `Sorry, r/${communityName} is already taken. Try another.`
+        );
+      }
+
+      await setDoc(communityDocRef, {
+        creatorId: user?.uid,
+        createdAt: serverTimestamp(),
+        numberOfMembers: 1,
+        privacyType: communityType,
+      });
+    } catch (error: any) {
+      console.log("handleCreateCommunity error", error);
+      setError(error.message);
+    }
+
+    setLoading(false);
+  };
+
   return (
     <>
-      <Modal isOpen={open} onClose={handleClose}>
+      <Modal isOpen={open} onClose={handleClose} size="lg">
         <ModalOverlay />
         <ModalContent>
           <ModalHeader
@@ -81,6 +131,9 @@ const CreateCommunityModal = ({ open, handleClose }: Props) => {
                 {charsRemaining} Characters remaining
               </Text>
               <Box mt={4} mb={4}>
+                <Text fontSize="9pt" color="red" pt={1}>
+                  {error}
+                </Text>
                 <Text fontWeight={600} fontSize={15}>
                   Community Type
                 </Text>
@@ -90,31 +143,73 @@ const CreateCommunityModal = ({ open, handleClose }: Props) => {
                     isChecked={communityType === "public"}
                     onChange={onCommunityTypeChange}
                   >
-                    Public
+                    <Flex align="center">
+                      <Icon as={BsFillPersonFill} color="gray.500" mr={2} />
+                      <Text fontSize="10pt" mr={1}>
+                        Public
+                      </Text>
+                      <Text fontSize="8pt" color="gray.500" pt={1}>
+                        Anyone can view, post, and comment to this community.
+                      </Text>
+                    </Flex>
                   </Checkbox>
                   <Checkbox
                     name="restricted"
                     isChecked={communityType === "restricted"}
                     onChange={onCommunityTypeChange}
                   >
-                    Restricted
+                    <Flex align="center" justify="center">
+                      <Icon
+                        as={BsFillEyeFill}
+                        color="gray.500"
+                        fontSize="12pt"
+                        mr={2}
+                      />
+                      <Text fontSize="10pt" mr={1}>
+                        Restricted
+                      </Text>
+                      <Text fontSize="8pt" color="gray.500" pt={1}>
+                        Anyone can view this community, but only approved users
+                        can post.
+                      </Text>
+                    </Flex>
                   </Checkbox>
                   <Checkbox
                     name="private"
                     isChecked={communityType === "private"}
                     onChange={onCommunityTypeChange}
                   >
-                    Private
+                    <Flex align="center">
+                      <Icon as={HiLockClosed} color="gray.500" mr={2} />
+                      <Text fontSize="10pt" mr={1}>
+                        Private
+                      </Text>
+                      <Text fontSize="8pt" color="gray.500" pt={1}>
+                        Only approved viewers can view and submit to this
+                        community.
+                      </Text>
+                    </Flex>
                   </Checkbox>
                 </Stack>
               </Box>
             </ModalBody>
           </Box>
-          <ModalFooter>
-            <Button colorScheme="blue" mr={3} onClick={handleClose}>
-              Close
+          <ModalFooter bg="gray.100" borderRadius="0px 0px 10px 10px">
+            <Button
+              variant="outline"
+              height="30px"
+              mr={3}
+              onClick={handleClose}
+            >
+              Cancel
             </Button>
-            <Button variant="ghost">Secondary Action</Button>
+            <Button
+              height="30px"
+              onClick={handleCreateCommunity}
+              isLoading={loading}
+            >
+              Create Community
+            </Button>
           </ModalFooter>
         </ModalContent>
       </Modal>
