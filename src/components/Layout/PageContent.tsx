@@ -8,7 +8,7 @@ type Props = {
 const PageContent = ({ children }: Props) => {
   console.log("Here is children", children);
   return (
-    <Flex>
+    <Flex justify="center" p="16px 0px">
       <Flex width="95%" justify="center" maxWidth="860px">
         {/* LHS */}
         <Flex
