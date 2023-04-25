@@ -6,7 +6,6 @@ type Props = {
   onSelectImage: (event: React.ChangeEvent<HTMLInputElement>) => void;
   setSelectedTab: (value: string) => void;
   setSelectedFile: (value: string) => void;
-  selectFileRef: React.RefObject<HTMLInputElement>;
 };
 
 const ImageUpload = ({
@@ -14,7 +13,6 @@ const ImageUpload = ({
   onSelectImage,
   setSelectedTab,
   setSelectedFile,
-  selectFileRef,
 }: Props) => {
   const selectedFileRef = useRef<HTMLInputElement>(null);
 

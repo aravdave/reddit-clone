@@ -85,7 +85,9 @@ const NewPostForm = ({ user }: Props) => {
       if (selectedFile) {
         //store in storage => getDownloadURL (return imageURL)
         const imageRef = ref(storage, `posts/${postDocRef.id}/image`);
+        console.log("over here!", imageRef, selectedFile);
         await uploadString(imageRef, selectedFile, "data_url");
+
         const downloadURL = await getDownloadURL(imageRef);
         console.log("we added the post, waiting on image upload");
         // upload post doc by adding imageURL
