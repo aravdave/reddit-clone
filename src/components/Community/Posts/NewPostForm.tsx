@@ -80,13 +80,11 @@ const NewPostForm = ({ user }: Props) => {
       });
       //check for selectedFile
       if (selectedFile) {
-        //store in storage => getDownloadURL (return imageURL)
+        //store in storage => DownloadURL (return imageURL)
         const imageRef = ref(storage, `posts/${postDocRef.id}/image`);
-        console.log("over here!", imageRef, selectedFile);
         await uploadString(imageRef, selectedFile, "data_url");
 
         const downloadURL = await getDownloadURL(imageRef);
-        console.log("we added the post, waiting on image upload");
         // upload post doc by adding imageURL
         await updateDoc(postDocRef, {
           imageURL: downloadURL,
@@ -109,7 +107,7 @@ const NewPostForm = ({ user }: Props) => {
 
     reader.onload = (readerEvent) => {
       if (readerEvent.target?.result) {
-        setSelectedFile(readerEvent.target?.result as string);
+        setSelectedFile(readerEvent.target.result as string);
       }
     };
   };

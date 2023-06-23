@@ -1,7 +1,7 @@
 import { Button, Flex, Image, Stack } from "@chakra-ui/react";
 import React, { useRef } from "react";
 
-type Props = {
+type ImageUploadProps = {
   selectedFile?: string;
   onSelectImage: (event: React.ChangeEvent<HTMLInputElement>) => void;
   setSelectedTab: (value: string) => void;
@@ -13,7 +13,7 @@ const ImageUpload = ({
   onSelectImage,
   setSelectedTab,
   setSelectedFile,
-}: Props) => {
+}: ImageUploadProps) => {
   const selectedFileRef = useRef<HTMLInputElement>(null);
 
   return (
